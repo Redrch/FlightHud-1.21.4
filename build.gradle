@@ -1,10 +1,15 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
+    id 'fabric-loom' version '1.9.2'
     id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+// Fail fast if Gradle was started with JDK < 21 (see org.gradle.java.home in gradle.properties)
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
+    throw new GradleException(
+        "Use JDK 21 to run Gradle (MC 1.21.4 + Fabric API require Java 21). Current JVM: ${JavaVersion.current()}. " +
+            "Fix org.gradle.java.home in gradle.properties or set JAVA_HOME to a JDK 21 install."
+    )
+}
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -34,16 +39,24 @@ processResources {
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
+    options.release = 21
 }
 
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 // if it is present.
 // If you remove this task, sources will not be generated.
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
     withSourcesJar()
 }
+
+// Do not set javaLauncher on JavaExec here: Loom's runClient sets `executable`, and Gradle
+// forbids mixing that with a conflicting `javaLauncher`. Use JDK 21 for the Gradle daemon
+// (JAVA_HOME / org.gradle.java.home in gradle.properties) so the game process matches MC 1.21.4.
 
 jar {
     from "LICENSE"

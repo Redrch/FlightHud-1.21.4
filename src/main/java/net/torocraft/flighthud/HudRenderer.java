@@ -26,7 +26,7 @@ public class HudRenderer extends HudComponent {
 
   private void setupConfig(MinecraftClient client) {
     HudComponent.CONFIG = null;
-    if (client.player.isFallFlying()) {
+    if (client.player.isGliding()) {
       if (FlightHud.CONFIG_SETTINGS.displayModeWhenFlying.equals(FULL)) {
         HudComponent.CONFIG = FlightHud.CONFIG_FULL;
       } else if (FlightHud.CONFIG_SETTINGS.displayModeWhenFlying.equals(MIN)) {
